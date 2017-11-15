@@ -1,0 +1,26 @@
+body { font-size: 16px }
+p { font-weight: bold }
+span { color: red }
+p span { display: none }
+img { float: right }
+
+
+.hh {
+    -webkit-animation-duration: 5s;
+    -webkit-animation-name: slide;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-direction: alternate;
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+    background-color: skyblue;
+}
+@-webkit-keyframes slide {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(120deg);
+    }
+}
+
