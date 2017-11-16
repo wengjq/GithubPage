@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"> 
+<title>backface-visibility</title> 
+<style>
+div
+{
+	position:relative;
+	height:60px;
+	width:60px;
+	background-color:red;
+}
+#div1
+{
+	-webkit-backface-visibility:hidden;
+	-moz-backface-visibility:hidden;
+	-ms-backface-visibility:hidden;
+}
+
+</style>
+</head>
+<body>
+<!-- backface-visibility 属性定义当元素不面向屏幕时是否可见。
+如果在旋转元素不希望看到其背面时，该属性很有用。 -->
+<div id="div1">DIV 1</div>
+
+
+</body>
+</html>
