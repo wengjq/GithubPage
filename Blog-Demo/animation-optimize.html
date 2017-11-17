@@ -1,0 +1,210 @@
+<html>
+  <head>
+    <title>Janky Animation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .controls {
+      position: fixed;
+      top: 2vw;
+      left: 2vw;
+      z-index: 1;
+    }
+
+    .controls button {
+      display: block;
+      font-size: 1em;
+      padding: 1em;
+      margin: 1em;
+      background-color: beige;
+      color: black;
+    }
+
+    .subtract:disabled {
+      opacity: 0.2;
+    }
+
+    .mover {
+      height: 3vw;
+      position: absolute;
+      z-index: 0;
+      will-change: transform;
+    }
+
+    .border {
+      border: 1px solid black;
+    }
+
+    @media (max-width: 600px) {
+      .controls button {
+        min-width: 20vw;
+      }
+    }
+    </style>
+  </head>
+  <body>
+    <img class="proto mover" src="logo-1024px.png"/>
+    <div class="controls">
+      <button class="add"></button>
+      <button class="subtract" disabled></button>
+      <button class="stop">Stop</button>
+      <button class="total">
+        total：
+        <span class="total-text">10<span>
+      </button>
+    </div>
+  </body>
+</html>
+<script>
+  (function(window) {
+    'use strict';
+
+    var app = {},
+        proto = document.querySelector('.proto'),
+        movers,
+        bodySize = document.body.getBoundingClientRect(),
+        ballSize = proto.getBoundingClientRect(),
+        maxHeight = Math.floor(bodySize.height - ballSize.height),
+        maxWidth = 97, // 100vw - width of square (3vw)
+        incrementor = 10,
+        distance = 3,
+        frame,
+        minimum = 10,
+        subtract = document.querySelector('.subtract'),
+        add = document.querySelector('.add');
+
+    app.optimize = false;
+    app.count = minimum;
+    app.enableApp = true;
+
+    app.init = function () {
+      if (movers) {
+        bodySize = document.body.getBoundingClientRect();
+        for (var i = 0; i < movers.length; i++) {
+          document.body.removeChild(movers[i]);
+        }
+        document.body.appendChild(proto);
+        ballSize = proto.getBoundingClientRect();
+        document.body.removeChild(proto);
+        maxHeight = Math.floor(bodySize.height - ballSize.height);
+      }
+      for (var i = 0; i < app.count; i++) {
+        var m = proto.cloneNode();
+        var top = Math.floor(Math.random() * (maxHeight));
+        if (top === maxHeight) {
+          m.classList.add('up');
+        } else {
+          m.classList.add('down');
+        }
+        var tmpLeft = (i / (app.count / maxWidth)) + 'vw';
+        var tmpTop = top + 'px';
+
+        m.style.transform = 'translate('+ tmpLeft +', '+ tmpTop +')';
+
+        document.body.appendChild(m);
+      }
+      movers = document.querySelectorAll('.mover');
+    };
+
+    app.update = function (timestamp) {
+      for (var i = 0; i < app.count; i++) {
+        var m = movers[i];
+          var pos = parseInt((m.style.transform.split(",")[1]).replace(/[^0-9]/ig,""));
+
+          m.classList.contains('down') ? pos += distance : pos -= distance;
+
+          if (pos < 0) pos = 0;
+          if (pos > maxHeight) pos = maxHeight;
+
+          var translateX = parseFloat((m.style.transform.split(",")[0]).replace(/[^\d|.]*/g, ''));
+          
+          m.style.transform = 'translate('+ translateX +'vw,' + pos +'px)';
+          
+          if (pos === 0) {
+            m.classList.remove('up');
+            m.classList.add('down');
+          }
+          if (pos === maxHeight) {
+            m.classList.remove('down');
+            m.classList.add('up');
+          }
+      }
+      frame = window.requestAnimationFrame(app.update);
+    }
+
+    document.querySelector('.stop').addEventListener('click', function (e) {
+      if (app.enableApp) {
+        cancelAnimationFrame(frame);
+        e.target.textContent = 'Start';
+        app.enableApp = false;
+      } else {
+        frame = window.requestAnimationFrame(app.update);
+        e.target.textContent = 'Stop';
+        app.enableApp = true;
+      }
+    });
+
+    add.addEventListener('click', function (e) {
+      cancelAnimationFrame(frame);
+      app.count += incrementor;
+      document.querySelector('.total-text').textContent = app.count;
+      subtract.disabled = false;
+      app.init();
+      frame = requestAnimationFrame(app.update);
+    });
+
+    subtract.addEventListener('click', function () {
+      cancelAnimationFrame(frame);
+      app.count -= incrementor;
+      document.querySelector('.total-text').textContent = app.count;
+      app.init();
+      frame = requestAnimationFrame(app.update);
+      if (app.count === minimum) {
+        subtract.disabled = true;
+      }
+    });
+
+    function debounce(func, wait, immediate) {
+      var timeout;
+      return function() {
+        var context = this, args = arguments;
+        var later = function() {
+          timeout = null;
+          if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+      };
+    };
+
+    var onResize = debounce(function () {
+      if (app.enableApp) {
+          cancelAnimationFrame(frame);
+          app.init();
+          frame = requestAnimationFrame(app.update);
+      }
+    }, 500);
+
+    window.addEventListener('resize', onResize);
+
+    add.textContent = 'Add ' + incrementor;
+    subtract.textContent = 'Subtract ' + incrementor;
+    document.body.removeChild(proto);
+    proto.classList.remove('.proto');
+    app.init();
+    window.app = app;
+    frame = window.requestAnimationFrame(app.update);
+
+  })(window);
+</script>
